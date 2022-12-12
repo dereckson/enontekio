@@ -1,6 +1,6 @@
 [package]
 name = "enontekio"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Utilities to solve problems with data extraction and manipulation, like Advent of Code puzzles."
 license = "BSD-2-Clause"
