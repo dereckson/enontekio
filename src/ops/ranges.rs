@@ -4,7 +4,7 @@ use num_integer::Integer;
 
 /// Description of how two ranges intersect
 #[derive(Debug, PartialEq)]
-pub enum Intersection {
+pub enum IntersectionDescription {
     /// The self is below the other
     Below,
 
@@ -27,28 +27,28 @@ pub enum Intersection {
     Above,
 }
 
-impl Intersection {
-    /// Test if there is any intersection
+impl IntersectionDescription {
+    /// Tests if there is any intersection
     pub fn is_any(&self) -> bool {
         match self {
-            Intersection::Below => false,
-            Intersection::Above => false,
+            IntersectionDescription::Below => false,
+            IntersectionDescription::Above => false,
             _ => true,
         }
     }
 
-    /// Test if the range is fully within the other
+    /// Tests if the range is fully within the other
     pub fn is_within(&self) -> bool {
         match self {
-            Intersection::Within | Intersection::Same => true,
+            IntersectionDescription::Within | IntersectionDescription::Same => true,
             _ => false,
         }
     }
 
-    /// Test if the range is fully over the other
+    /// Tests if the range is fully over the other
     pub fn is_over(&self) -> bool {
         match self {
-            Intersection::Over | Intersection::Same => true,
+            IntersectionDescription::Over | IntersectionDescription::Same => true,
             _ => false,
         }
     }
@@ -56,107 +56,107 @@ impl Intersection {
 
 pub trait Intersect<T: PartialOrd, U: RangeBounds<T>>: RangeBounds<T> {
     /// Describes the intersection between two ranges.
-    fn intersect(&self, other: &U) -> Intersection;
+    fn describe_intersection(&self, other: &U) -> IntersectionDescription;
 }
 
 impl<T: PartialOrd> Intersect<T, Range<T>> for Range<T> {
-    fn intersect(&self, other: &Range<T>) -> Intersection {
+    fn describe_intersection(&self, other: &Range<T>) -> IntersectionDescription {
         if self.end == other.end {
             if self.start < other.start {
-                Intersection::Over
+                IntersectionDescription::Over
             } else if self.start > other.start {
-                Intersection::Within
+                IntersectionDescription::Within
             } else {
-                Intersection::Same
+                IntersectionDescription::Same
             }
         } else if self.end < other.end {
             if self.end <= other.start {
-                Intersection::Below
+                IntersectionDescription::Below
             } else if self.start < other.start {
-                Intersection::BelowOverlap
+                IntersectionDescription::BelowOverlap
             } else {
-                Intersection::Within
+                IntersectionDescription::Within
             }
         } else if self.start < other.end {
             if self.start <= other.start {
-                Intersection::Over
+                IntersectionDescription::Over
             } else {
-                Intersection::AboveOverlap
+                IntersectionDescription::AboveOverlap
             }
         } else {
-            Intersection::Above
+            IntersectionDescription::Above
         }
     }
 }
 
 impl<T: PartialOrd> Intersect<T, RangeFrom<T>> for Range<T> {
-    fn intersect(&self, other: &RangeFrom<T>) -> Intersection {
+    fn describe_intersection(&self, other: &RangeFrom<T>) -> IntersectionDescription {
         if self.end <= other.start {
-            Intersection::Below
+            IntersectionDescription::Below
         } else if self.start < other.start {
-            Intersection::BelowOverlap
+            IntersectionDescription::BelowOverlap
         } else {
-            Intersection::Within
+            IntersectionDescription::Within
         }
     }
 }
 
 impl<T: PartialOrd> Intersect<T, RangeFull> for Range<T> {
-    fn intersect(&self, _: &RangeFull) -> Intersection {
-        Intersection::Within
+    fn describe_intersection(&self, _: &RangeFull) -> IntersectionDescription {
+        IntersectionDescription::Within
     }
 }
 
 impl<T: PartialOrd> Intersect<T, RangeTo<T>> for Range<T> {
-    fn intersect(&self, other: &RangeTo<T>) -> Intersection {
+    fn describe_intersection(&self, other: &RangeTo<T>) -> IntersectionDescription {
         if self.start >= other.end {
-            Intersection::Above
+            IntersectionDescription::Above
         } else if self.end > other.end {
-            Intersection::AboveOverlap
+            IntersectionDescription::AboveOverlap
         } else {
-            Intersection::Within
+            IntersectionDescription::Within
         }
     }
 }
 
 impl<T: PartialOrd + Integer + Copy> Intersect<T, Range<T>> for RangeInclusive<T> {
-    fn intersect(&self, other: &Range<T>) -> Intersection {
+    fn describe_intersection(&self, other: &Range<T>) -> IntersectionDescription {
         let end = *self.end() + T::one();
-        (*self.start()..end).intersect(other)
+        (*self.start()..end).describe_intersection(other)
     }
 }
 
 impl<T: PartialOrd + Integer + Copy> Intersect<T, RangeFrom<T>> for RangeInclusive<T> {
-    fn intersect(&self, other: &RangeFrom<T>) -> Intersection {
+    fn describe_intersection(&self, other: &RangeFrom<T>) -> IntersectionDescription {
         let end = *self.end() + T::one();
-        (*self.start()..end).intersect(other)
+        (*self.start()..end).describe_intersection(other)
     }
 }
 
 impl<T: PartialOrd> Intersect<T, RangeFull> for RangeInclusive<T> {
-    fn intersect(&self, _: &RangeFull) -> Intersection {
-        Intersection::Within
+    fn describe_intersection(&self, _: &RangeFull) -> IntersectionDescription {
+        IntersectionDescription::Within
     }
 }
 
 impl<T: PartialOrd + Integer + Copy> Intersect<T, RangeTo<T>> for RangeInclusive<T> {
-    fn intersect(&self, other: &RangeTo<T>) -> Intersection {
+    fn describe_intersection(&self, other: &RangeTo<T>) -> IntersectionDescription {
         let end = *self.end() + T::one();
-        (*self.start()..end).intersect(other)
+        (*self.start()..end).describe_intersection(other)
     }
 }
 
 impl<T: PartialOrd + Copy + Integer> Intersect<T, RangeInclusive<T>> for Range<T> {
-    fn intersect(&self, other: &RangeInclusive<T>) -> Intersection {
+    fn describe_intersection(&self, other: &RangeInclusive<T>) -> IntersectionDescription {
        let other_end = *other.end() + T::one();
-        self.intersect(&(*other.start()..other_end))
+        self.describe_intersection(&(*other.start()..other_end))
     }
 }
 
 impl<T: PartialOrd + Integer + Copy> Intersect<T, RangeInclusive<T>> for RangeInclusive<T> {
-    fn intersect(&self, other: &RangeInclusive<T>) -> Intersection {
+    fn describe_intersection(&self, other: &RangeInclusive<T>) -> IntersectionDescription {
         let end = *self.end() + T::one();
-        (*self.start()..end).intersect(other)
+        (*self.start()..end).describe_intersection(other)
     }
 }
 
@@ -166,93 +166,93 @@ mod test {
 
     #[test]
     pub fn test_range_intersect() {
-        assert_eq!((3..10).intersect(&(11..11)), Intersection::Below);
-        assert_eq!((3..10).intersect(&(10..11)), Intersection::Below);
-        assert_eq!((3..10).intersect(&(9..11)), Intersection::BelowOverlap);
-        assert_eq!((3..10).intersect(&(9..10)), Intersection::Over);
-        assert_eq!((3..10).intersect(&(3..10)), Intersection::Same);
-        assert_eq!((3..10).intersect(&(5..9)), Intersection::Over);
-        assert_eq!((3..10).intersect(&(3..9)), Intersection::Over);
-        assert_eq!((3..10).intersect(&(2..11)), Intersection::Within);
-        assert_eq!((3..10).intersect(&(3..11)), Intersection::Within);
-        assert_eq!((3..10).intersect(&(2..9)), Intersection::AboveOverlap);
-        assert_eq!((3..10).intersect(&(2..3)), Intersection::Above);
-        assert_eq!((3..10).intersect(&(1..2)), Intersection::Above);
+        assert_eq!((3..10).describe_intersection(&(11..11)), IntersectionDescription::Below);
+        assert_eq!((3..10).describe_intersection(&(10..11)), IntersectionDescription::Below);
+        assert_eq!((3..10).describe_intersection(&(9..11)), IntersectionDescription::BelowOverlap);
+        assert_eq!((3..10).describe_intersection(&(9..10)), IntersectionDescription::Over);
+        assert_eq!((3..10).describe_intersection(&(3..10)), IntersectionDescription::Same);
+        assert_eq!((3..10).describe_intersection(&(5..9)), IntersectionDescription::Over);
+        assert_eq!((3..10).describe_intersection(&(3..9)), IntersectionDescription::Over);
+        assert_eq!((3..10).describe_intersection(&(2..11)), IntersectionDescription::Within);
+        assert_eq!((3..10).describe_intersection(&(3..11)), IntersectionDescription::Within);
+        assert_eq!((3..10).describe_intersection(&(2..9)), IntersectionDescription::AboveOverlap);
+        assert_eq!((3..10).describe_intersection(&(2..3)), IntersectionDescription::Above);
+        assert_eq!((3..10).describe_intersection(&(1..2)), IntersectionDescription::Above);
 
-        assert_eq!((3..10).intersect(&(11..)), Intersection::Below);
-        assert_eq!((3..10).intersect(&(10..)), Intersection::Below);
-        assert_eq!((3..10).intersect(&(9..)), Intersection::BelowOverlap);
-        assert_eq!((3..10).intersect(&(3..)), Intersection::Within);
-        assert_eq!((3..10).intersect(&(2..)), Intersection::Within);
+        assert_eq!((3..10).describe_intersection(&(11..)), IntersectionDescription::Below);
+        assert_eq!((3..10).describe_intersection(&(10..)), IntersectionDescription::Below);
+        assert_eq!((3..10).describe_intersection(&(9..)), IntersectionDescription::BelowOverlap);
+        assert_eq!((3..10).describe_intersection(&(3..)), IntersectionDescription::Within);
+        assert_eq!((3..10).describe_intersection(&(2..)), IntersectionDescription::Within);
 
-        assert_eq!((3..10).intersect(&(..)), Intersection::Within);
+        assert_eq!((3..10).describe_intersection(&(..)), IntersectionDescription::Within);
 
-        assert_eq!((3..10).intersect(&(..11)), Intersection::Within);
-        assert_eq!((3..10).intersect(&(..10)), Intersection::Within);
-        assert_eq!((3..10).intersect(&(..9)), Intersection::AboveOverlap);
-        assert_eq!((3..10).intersect(&(..3)), Intersection::Above);
-        assert_eq!((3..10).intersect(&(..2)), Intersection::Above);
+        assert_eq!((3..10).describe_intersection(&(..11)), IntersectionDescription::Within);
+        assert_eq!((3..10).describe_intersection(&(..10)), IntersectionDescription::Within);
+        assert_eq!((3..10).describe_intersection(&(..9)), IntersectionDescription::AboveOverlap);
+        assert_eq!((3..10).describe_intersection(&(..3)), IntersectionDescription::Above);
+        assert_eq!((3..10).describe_intersection(&(..2)), IntersectionDescription::Above);
     }
 
     #[test]
     pub fn test_inclusive_range_intersect() {
-        assert_eq!((3..=9).intersect(&(11..11)), Intersection::Below);
-        assert_eq!((3..=9).intersect(&(10..11)), Intersection::Below);
-        assert_eq!((3..=9).intersect(&(9..11)), Intersection::BelowOverlap);
-        assert_eq!((3..=9).intersect(&(9..10)), Intersection::Over);
-        assert_eq!((3..=9).intersect(&(3..10)), Intersection::Same);
-        assert_eq!((3..=9).intersect(&(5..9)), Intersection::Over);
-        assert_eq!((3..=9).intersect(&(3..9)), Intersection::Over);
-        assert_eq!((3..=9).intersect(&(2..11)), Intersection::Within);
-        assert_eq!((3..=9).intersect(&(3..11)), Intersection::Within);
-        assert_eq!((3..=9).intersect(&(2..9)), Intersection::AboveOverlap);
-        assert_eq!((3..=9).intersect(&(2..3)), Intersection::Above);
-        assert_eq!((3..=9).intersect(&(1..2)), Intersection::Above);
+        assert_eq!((3..=9).describe_intersection(&(11..11)), IntersectionDescription::Below);
+        assert_eq!((3..=9).describe_intersection(&(10..11)), IntersectionDescription::Below);
+        assert_eq!((3..=9).describe_intersection(&(9..11)), IntersectionDescription::BelowOverlap);
+        assert_eq!((3..=9).describe_intersection(&(9..10)), IntersectionDescription::Over);
+        assert_eq!((3..=9).describe_intersection(&(3..10)), IntersectionDescription::Same);
+        assert_eq!((3..=9).describe_intersection(&(5..9)), IntersectionDescription::Over);
+        assert_eq!((3..=9).describe_intersection(&(3..9)), IntersectionDescription::Over);
+        assert_eq!((3..=9).describe_intersection(&(2..11)), IntersectionDescription::Within);
+        assert_eq!((3..=9).describe_intersection(&(3..11)), IntersectionDescription::Within);
+        assert_eq!((3..=9).describe_intersection(&(2..9)), IntersectionDescription::AboveOverlap);
+        assert_eq!((3..=9).describe_intersection(&(2..3)), IntersectionDescription::Above);
+        assert_eq!((3..=9).describe_intersection(&(1..2)), IntersectionDescription::Above);
 
-        assert_eq!((3..=9).intersect(&(11..)), Intersection::Below);
-        assert_eq!((3..=9).intersect(&(10..)), Intersection::Below);
-        assert_eq!((3..=9).intersect(&(9..)), Intersection::BelowOverlap);
-        assert_eq!((3..=9).intersect(&(3..)), Intersection::Within);
-        assert_eq!((3..=9).intersect(&(2..)), Intersection::Within);
+        assert_eq!((3..=9).describe_intersection(&(11..)), IntersectionDescription::Below);
+        assert_eq!((3..=9).describe_intersection(&(10..)), IntersectionDescription::Below);
+        assert_eq!((3..=9).describe_intersection(&(9..)), IntersectionDescription::BelowOverlap);
+        assert_eq!((3..=9).describe_intersection(&(3..)), IntersectionDescription::Within);
+        assert_eq!((3..=9).describe_intersection(&(2..)), IntersectionDescription::Within);
 
-        assert_eq!((3..=9).intersect(&(..)), Intersection::Within);
+        assert_eq!((3..=9).describe_intersection(&(..)), IntersectionDescription::Within);
 
-        assert_eq!((3..=9).intersect(&(..11)), Intersection::Within);
-        assert_eq!((3..=9).intersect(&(..10)), Intersection::Within);
-        assert_eq!((3..=9).intersect(&(..9)), Intersection::AboveOverlap);
-        assert_eq!((3..=9).intersect(&(..3)), Intersection::Above);
-        assert_eq!((3..=9).intersect(&(..2)), Intersection::Above);
+        assert_eq!((3..=9).describe_intersection(&(..11)), IntersectionDescription::Within);
+        assert_eq!((3..=9).describe_intersection(&(..10)), IntersectionDescription::Within);
+        assert_eq!((3..=9).describe_intersection(&(..9)), IntersectionDescription::AboveOverlap);
+        assert_eq!((3..=9).describe_intersection(&(..3)), IntersectionDescription::Above);
+        assert_eq!((3..=9).describe_intersection(&(..2)), IntersectionDescription::Above);
     }
 
     #[test]
     pub fn test_range_intersect_with_inclusive_range() {
-        assert_eq!((3..10).intersect(&(11..=10)), Intersection::Below);
-        assert_eq!((3..10).intersect(&(10..=10)), Intersection::Below);
-        assert_eq!((3..10).intersect(&(9..=10)), Intersection::BelowOverlap);
-        assert_eq!((3..10).intersect(&(9..=9)), Intersection::Over);
-        assert_eq!((3..10).intersect(&(3..=9)), Intersection::Same);
-        assert_eq!((3..10).intersect(&(5..=8)), Intersection::Over);
-        assert_eq!((3..10).intersect(&(3..=8)), Intersection::Over);
-        assert_eq!((3..10).intersect(&(2..=10)), Intersection::Within);
-        assert_eq!((3..10).intersect(&(3..=10)), Intersection::Within);
-        assert_eq!((3..10).intersect(&(2..=8)), Intersection::AboveOverlap);
-        assert_eq!((3..10).intersect(&(2..=2)), Intersection::Above);
-        assert_eq!((3..10).intersect(&(1..=1)), Intersection::Above);
+        assert_eq!((3..10).describe_intersection(&(11..=10)), IntersectionDescription::Below);
+        assert_eq!((3..10).describe_intersection(&(10..=10)), IntersectionDescription::Below);
+        assert_eq!((3..10).describe_intersection(&(9..=10)), IntersectionDescription::BelowOverlap);
+        assert_eq!((3..10).describe_intersection(&(9..=9)), IntersectionDescription::Over);
+        assert_eq!((3..10).describe_intersection(&(3..=9)), IntersectionDescription::Same);
+        assert_eq!((3..10).describe_intersection(&(5..=8)), IntersectionDescription::Over);
+        assert_eq!((3..10).describe_intersection(&(3..=8)), IntersectionDescription::Over);
+        assert_eq!((3..10).describe_intersection(&(2..=10)), IntersectionDescription::Within);
+        assert_eq!((3..10).describe_intersection(&(3..=10)), IntersectionDescription::Within);
+        assert_eq!((3..10).describe_intersection(&(2..=8)), IntersectionDescription::AboveOverlap);
+        assert_eq!((3..10).describe_intersection(&(2..=2)), IntersectionDescription::Above);
+        assert_eq!((3..10).describe_intersection(&(1..=1)), IntersectionDescription::Above);
     }
 
     #[test]
     pub fn test_inclusive_range_intersect_with_inclusive_range() {
-        assert_eq!((3..=9).intersect(&(11..=10)), Intersection::Below);
-        assert_eq!((3..=9).intersect(&(10..=10)), Intersection::Below);
-        assert_eq!((3..=9).intersect(&(9..=10)), Intersection::BelowOverlap);
-        assert_eq!((3..=9).intersect(&(9..=9)), Intersection::Over);
-        assert_eq!((3..=9).intersect(&(3..=9)), Intersection::Same);
-        assert_eq!((3..=9).intersect(&(5..=8)), Intersection::Over);
-        assert_eq!((3..=9).intersect(&(3..=8)), Intersection::Over);
-        assert_eq!((3..=9).intersect(&(2..=10)), Intersection::Within);
-        assert_eq!((3..=9).intersect(&(3..=10)), Intersection::Within);
-        assert_eq!((3..=9).intersect(&(2..=8)), Intersection::AboveOverlap);
-        assert_eq!((3..=9).intersect(&(2..=2)), Intersection::Above);
-        assert_eq!((3..=9).intersect(&(1..=1)), Intersection::Above);
+        assert_eq!((3..=9).describe_intersection(&(11..=10)), IntersectionDescription::Below);
+        assert_eq!((3..=9).describe_intersection(&(10..=10)), IntersectionDescription::Below);
+        assert_eq!((3..=9).describe_intersection(&(9..=10)), IntersectionDescription::BelowOverlap);
+        assert_eq!((3..=9).describe_intersection(&(9..=9)), IntersectionDescription::Over);
+        assert_eq!((3..=9).describe_intersection(&(3..=9)), IntersectionDescription::Same);
+        assert_eq!((3..=9).describe_intersection(&(5..=8)), IntersectionDescription::Over);
+        assert_eq!((3..=9).describe_intersection(&(3..=8)), IntersectionDescription::Over);
+        assert_eq!((3..=9).describe_intersection(&(2..=10)), IntersectionDescription::Within);
+        assert_eq!((3..=9).describe_intersection(&(3..=10)), IntersectionDescription::Within);
+        assert_eq!((3..=9).describe_intersection(&(2..=8)), IntersectionDescription::AboveOverlap);
+        assert_eq!((3..=9).describe_intersection(&(2..=2)), IntersectionDescription::Above);
+        assert_eq!((3..=9).describe_intersection(&(1..=1)), IntersectionDescription::Above);
     }
 }
