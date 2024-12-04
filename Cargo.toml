@@ -1,10 +1,11 @@
 [package]
 name = "enontekio"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Utilities to solve problems with data extraction and manipulation, like Advent of Code puzzles."
 license = "BSD-2-Clause"
 repository = "https://github.com/dereckson/enontekio/"
+keywords = ["advent-of-code"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
