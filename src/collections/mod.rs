@@ -41,6 +41,75 @@ impl<T> Coordinates3D for Vec<Vec<Vec<T>>> {
     }
 }
 
+/// Returns all the possible vectors to move in a grid.
+/// The moves can be horizontal, vertical or in diagonal.
+pub fn get_all_direction_vectors_2d() -> Vec<(i32, i32)> {
+    vec![
+        // Vertically
+        (1, 0),
+        (-1, 0),
+
+        // Horizontally
+        (0, 1),
+        (0, -1),
+
+        // Diagonally
+        (1, 1),
+        (1, -1),
+        (-1, 1),
+        (-1, -1),
+    ]
+}
+
+/// Returns all the possible vectors to move in a grid in taxicab geometry.
+/// The moves can be horizontal or vertical.
+pub fn get_taxicab_direction_vectors_2d() -> Vec<(i32, i32)> {
+    vec![
+        // Vertically
+        (1, 0),
+        (-1, 0),
+
+        // Horizontally
+        (0, 1),
+        (0, -1),
+    ]
+}
+
+/// Returns all the possible vectors to move in a grid in diagonal.
+pub fn get_diagonal_direction_vectors_2d() -> Vec<(i32, i32)> {
+    vec![
+        (1, 1),
+        (1, -1),
+        (-1, 1),
+        (-1, -1),
+    ]
+}
+
+/// Checks if the specified coordinates are valid for a specified 2D grid.
+/// A coordinate is valid if it doesn't overflow and is positive.
+///
+/// This method assumes the grid argument to be a grid,
+/// ie each line is expected to have the same length.
+///
+/// This method has been designed to compute coordinates and filter the result.
+pub fn are_valid_coordinates_for_2d_grid<T>(grid: &Vec<Vec<T>>, coords: (i32, i32)) -> bool {
+    if grid.is_empty() {
+        return false;
+    }
+
+    let i = coords.0;
+    let j = coords.1;
+
+    if i < 0 || j < 0 {
+        return false;
+    }
+
+    let max_i = grid.len() - 1;
+    let max_j = grid[0].len() - 1;
+
+    (i as usize) <= max_i && (j as usize) <= max_j
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -86,5 +155,21 @@ mod tests {
 
         let expected = vec![(0 as usize, 0 as usize), (0, 1), (1, 0), (1, 1)];
         assert_eq!(expected, digits.coordinates_2d());
+    }
+
+    #[test]
+    fn test_are_valid_2d_grid_coordinates() {
+        let grid: Vec<Vec<u32>> = vec![
+            vec![1, 2],
+            vec![3, 4],
+        ];
+
+        assert_eq!(true, are_valid_coordinates_for_2d_grid(&grid, (0, 0)));
+        assert_eq!(true, are_valid_coordinates_for_2d_grid(&grid, (0, 1)));
+        assert_eq!(true, are_valid_coordinates_for_2d_grid(&grid, (1, 0)));
+        assert_eq!(true, are_valid_coordinates_for_2d_grid(&grid, (1, 1)));
+
+        assert_eq!(false, are_valid_coordinates_for_2d_grid(&grid, (-1, 1)));
+        assert_eq!(false, are_valid_coordinates_for_2d_grid(&grid, (1, 3)));
     }
 }
