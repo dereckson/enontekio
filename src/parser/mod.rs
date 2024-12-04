@@ -50,6 +50,41 @@ pub fn parse_digits_grid_line(line: &str) -> Option<Vec<u32>> {
         .collect()
 }
 
+/// Attempts to open and parse a file containing characters into a vector of char vectors
+///
+/// For example, a file `chars.dat` with:
+///     abcde
+///     xizzy
+///
+/// ```
+/// use enontekio::parser;
+///
+/// let expected_chars = vec![
+///     vec!['a', 'b', 'c', 'd', 'e'],
+///     vec!['x', 'i', 'z', 'z', 'y'],
+/// ];
+/// let actual_chars = parser::parse_chars_grid_file("tests/parser/chars.dat").unwrap();
+/// assert_eq!(expected_chars, actual_chars);
+/// ```
+pub fn parse_chars_grid_file<P>(filename: P) -> Result<Vec<Vec<char>>, IOError> where P: AsRef<Path> {
+    parse_file_by_line(filename, |line| parse_chars_grid_line(&line.unwrap()))
+}
+
+/// Parses a string into a vector of digits
+///
+/// ```
+/// use enontekio::parser;
+///
+/// let expected_chars = vec!['a', 'b', 'c', 'd', 'e'];
+/// let actual_chars = parser::parse_chars_grid_line("abcde");
+/// assert_eq!(expected_chars, actual_chars);
+/// ```
+pub fn parse_chars_grid_line(line: &str) -> Vec<char> {
+    line
+        .chars()
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
