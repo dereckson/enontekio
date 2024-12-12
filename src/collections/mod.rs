@@ -110,6 +110,33 @@ pub fn are_valid_coordinates_for_2d_grid<T>(grid: &Vec<Vec<T>>, coords: (i32, i3
     (i as usize) <= max_i && (j as usize) <= max_j
 }
 
+/// Gets the coordinates of each neighbor cell belonging to the grid.
+///
+/// Neighbors are only seeked horizontally or vertically.
+/// Any coordinates will belong to the grid.
+pub fn get_taxicab_neighbors_in_2d_grid<T> (grid: &Vec<Vec<T>>, i: usize, j: usize) -> Vec<(usize, usize)> {
+    get_taxicab_direction_vectors_2d()
+        .iter()
+        .map(|&(delta_i, delta_j)| (delta_i + i as i32, delta_j + j as i32))
+        .filter(|&coords| are_valid_coordinates_for_2d_grid(&grid, coords))
+        .map(|(i, j)| (i as usize, j as usize))
+        .collect()
+}
+
+/// Gets the coordinates of each neighbor cell belonging to the grid.
+///
+/// Neighbors are only seeked horizontally, vertically or diagonally.
+/// Any coordinates will belong to the grid.
+pub fn get_all_neighbors_in_2d_grid<T> (grid: &Vec<Vec<T>>, i: usize, j: usize) -> Vec<(usize, usize)> {
+    get_all_direction_vectors_2d()
+        .iter()
+        .map(|&(delta_i, delta_j)| (delta_i + i as i32, delta_j + j as i32))
+        .filter(|&coords| are_valid_coordinates_for_2d_grid(&grid, coords))
+        .map(|(i, j)| (i as usize, j as usize))
+        .collect()
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
