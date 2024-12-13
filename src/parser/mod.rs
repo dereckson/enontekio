@@ -17,6 +17,74 @@ pub fn parse_file_by_line<P, T, C>(filename: P, callback: fn(Result<String, IOEr
         .collect())
 }
 
+/// Attempts to open and parse a file composed of blocks of lines,
+/// with a callback receiving a vector of n lines of text.
+///
+/// The callback function will be used as a map and receive a Vec<String> as parameter.
+/// The vector will contain <lines_per_block> strings.
+///
+/// The type should be compatible with collect to build a vector of your collection type.
+///
+/// Function returns a type collected from an iterator yielding T, for example Vec<T>.
+/// T is the type returned by your callback method.
+pub fn parse_file_by_lines_block<P, T, C>(filename: P, lines_per_block: usize, callback: fn(Vec<String>) -> T) -> Result<C, IOError>
+where P: AsRef<Path>, C: FromIterator<T> {
+    let fd = File::open(filename)?;
+    let lines = BufReader::new(fd).lines();
+
+    let mut items = Vec::new();
+    let mut block_lines = Vec::new();
+    for line in lines {
+        block_lines.push(line?);
+
+        if block_lines.len() == lines_per_block {
+            items.push(callback(block_lines));
+            block_lines = Vec::new();
+        }
+    }
+
+    Ok(items.into_iter().collect())
+}
+
+/// Attempts to open and parse a file composed of blocks of lines,
+/// with a callback receiving a vector of n lines of text.
+///
+/// Each block is separated by <separator_lines_between_block> lines to ignore.
+///
+/// The callback function will be used as a map and receive a Vec<String> as parameter.
+/// The vector will contain <lines_per_block> strings.
+///
+/// The type should be compatible with collect to build a vector of your collection type.
+///
+/// Function returns a type collected from an iterator yielding T, for example Vec<T>.
+/// T is the type returned by your callback method.
+pub fn parse_file_by_lines_block_with_blank_lines_separator<P, T, C>(filename: P, lines_per_block: usize, separator_lines_between_block: usize, callback: fn(Vec<String>) -> T) -> Result<C, IOError>
+where P: AsRef<Path>, C: FromIterator<T> {
+    let fd = File::open(filename)?;
+    let lines = BufReader::new(fd).lines();
+
+    let mut items = Vec::new();
+    let mut block_lines = Vec::new();
+    let mut lines_to_ignore = 0;
+
+    for line in lines {
+        if lines_to_ignore > 0 {
+            lines_to_ignore -= 1;
+            continue;
+        }
+
+        block_lines.push(line?);
+
+        if block_lines.len() == lines_per_block {
+            items.push(callback(block_lines));
+            block_lines = Vec::new();
+            lines_to_ignore = separator_lines_between_block;
+        }
+    }
+
+    Ok(items.into_iter().collect())
+}
+
 /// Attempts to open and parse a file containing digits into a vector of u32 vectors
 ///
 /// For example, a file `digits.dat` with:
